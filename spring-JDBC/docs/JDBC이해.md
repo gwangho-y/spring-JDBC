@@ -82,4 +82,109 @@ JDBC의 등장으로 인해 위에서 말한 DB 교체에 따른 2가지 문제�
         - JPA
         - 하이버네이트
         - 이클립스링크
-      
+
+
+## JDBC DriverManager 연결 이해
+
+### JDBC 커넥션 인터페이스와 구현
+
+![/images/7.png](/images/7.png)
+- JDBC는 `java.sql.Connection` 표준 커넥션 인터페이스를 정의한다
+- H2 데이터베이스 드라이버는 JDBC Connection 인터페이스를 구현 `org.h2.jdbc.JdbcConnection`구현체를 제공한다
+
+### DriverManager 커넥션 요청 흐름
+
+![/images/8.png](/images/8.png)
+**JDBC의 DriverManager** 는 라이브러리에 등록된 DB 드라이버들을 관리하고, 커넥션을 획득하는 기능을 제공한다.
+
+1. 커넥션이 필요하면 `DriverManager.getConnection`호출
+2. `DriverManager` 는 라이브러리에 등록된 드라이버 목록을 자동으로 인식. 아래 순서로 커넥션 획득 가능한지 확인한다.
+    1. URL : `jdbc:h2:tcp://localhost/~/test`
+    2. 이름, 비밀번호 등 접속에 필요한 추가 정보
+    3. 각각의 드라이버는 URL 정보를 체크해서 본인이 처리할 수 있는 요청인지 확인한다.
+
+       `jdbc:h2` 로 시작하면 h2 드라이버가 커넥션을 획득하고 클라이언트에 반환한다.
+
+3. 2에서 찾은 커넥션 쿠현체가 클라이언트 반환된다.
+
+## JDBC 개발 - 등록
+
+```java
+@Slf4j
+public class MemberRepositoryV0 {
+    public Member save(Member member) throws SQLException {
+        String sql = "insert into member(member_id, money) values (?, ?)";
+
+        Connection con = null;
+        PreparedStatement pstmt = null;
+
+        try{
+            con = getConnection();
+            pstmt = con.prepareStatement(sql);
+            pstmt.setString(1, member.getMemberId());
+            pstmt.setInt(2, member.getMoney());
+            pstmt.executeUpdate();
+            return member;
+        } catch (SQLException e) {
+            log.error("db error", e);
+            throw e;
+        }finally {
+
+            close(con, pstmt, null);
+        }
+    }
+
+    private void close(Connection con, Statement stmt, ResultSet rs) {
+
+        if (rs != null ) {
+            try {
+                rs.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                log.info("error", e);
+            }
+        }
+
+        if (stmt != null) {
+            try {
+                stmt.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                log.info("error", e);
+            }
+        }
+
+        if (con!=null) {
+            try {
+                con.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                log.info("error", e);
+            }
+        }
+
+    }
+
+    private Connection getConnection() {
+        return DBConnectionUtil.getConnection();
+    }
+}
+```
+
+### save() - SQL 전달
+
+- sql : 데이터베이스에 전달할 SQL을 정의한다. 여기서는 데이터를 등록해야 하므로 insert sql 을 준비했다.
+- con.prepareStatement(sql) : 데이터베이스에 전달할 SQL과 파라미터로 전달할 데이터들을 준비한다.
+    - `pstmt.setString(1, member.getMemberId())` : SQL의 첫번째 ? 에 값을 지정한다. 문자이므
+      로 setString 을 사용한다
+    - `pstmt.setInt(2, member.getMoney())` : SQL의 두번째 ? 에 값을 지정한다. Int 형 숫자이므로
+      setInt 를 지정한다
+    - pstmt.executeUpdate() : Statement 를 통해 준비된 SQL을 커넥션을 통해 실제 데이터베이스에 전달한다. 참고로 executeUpdate() 은 int 를 반환하는데 영향받은 DB row 수를 반환한다. 여기서는 하나의 row를 등록했으므로 1을 반환한다
+
+  > 참고
+  >
+  >
+  > PreparedStatement 는 Statement 의 자식 타입인데, ? 를 통한 파라미터 바인딩을 가능하게 해준다.
+  > SQL Injection 공격을 예방하려면 PreparedStatement 를 통한 파라미터 바인딩 방식을 사용해야한다.
+  >
+  > 문자 더하기로 문자열을 그대로 집어 넣어버리면 Sql 인젝션 당하기 때문에 ?로 바인딩을 해야한다.
