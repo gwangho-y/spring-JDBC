@@ -188,3 +188,34 @@ public class MemberRepositoryV0 {
   > SQL Injection 공격을 예방하려면 PreparedStatement 를 통한 파라미터 바인딩 방식을 사용해야한다.
   >
   > 문자 더하기로 문자열을 그대로 집어 넣어버리면 Sql 인젝션 당하기 때문에 ?로 바인딩을 해야한다.
+
+
+
+## JDBC 개발 - 조회
+
+### ResultSet
+
+- selecet 쿼리의 결과가 순서대로 들어간다.
+    - select member_id, money 라고 지정하면 member_id , money 라는 이름으로 데이터
+      가 저장된다.
+- `ResultSet` 내부에 있는 커서( cursor )를 이동해서 다음 데이터를 조회할 수 있다
+- `rs.next()` : 이것을 호출하면 커서가 다음으로 이동한다. 참고로 최초의 커서는 데이터를 가리키고 있지 않기 때문에 rs.next() 를 최초 한번은 호출해야 데이터를 조회할 수 있다.
+    - rs.next() 의 결과가 true 면 커서의 이동 결과 데이터가 있다는 뜻이다
+
+
+## JDBC 개발 - 수정, 삭제
+
+```java
+//update money: 10000 -> 20000
+repository.update(member.getMemberId(), 20000);
+Member updateMember = repository.findById(member.getMemberId());
+assertThat(updateMember.getMoney()).isEqualTo(20000);
+
+//delete
+repository.delete(member.getMemberId());
+// 삭제해서 찾지 못 하니 NoSuchElementException 에러가 터지면 삭제 된게 맞다고 판단
+assertThatThrownBy(() -> repository.findById(member.getMemberId()))
+        .isInstanceOf(NoSuchElementException.class);
+```
+
+- 삭제의 경우 테스트는 `assertThatThrownBy` 를 사용해서 `NoSuchElementException` 에러와 같으면 삭제가 된 것으로 판단한다.
