@@ -76,6 +76,56 @@ public class MemberRepositoryV0 {
         }
     }
 
+    public void update(String memberId, int money) throws SQLException {
+        String sql = "update member set money=? where member_id=?";
+        Connection con = null;
+        PreparedStatement pstmt = null;
+
+        try{
+            con = getConnection();
+            pstmt = con.prepareStatement(sql);
+            pstmt.setInt(1, money);
+            pstmt.setString(2, memberId);
+            int resultSize = pstmt.executeUpdate();
+
+            // executeUpdate는 DB에 영향 받은 row의 수만큼 반환해준다.
+            log.error("resultSize={}", resultSize);
+
+        } catch (SQLException e) {
+            log.error("db error", e);
+            throw e;
+        }finally {
+            // 리소스 해제는 반드시 finally에서 실행해줘야지 위에서 해버리면 에러 터졌을 때
+            // 클로즈 못 한다.
+            close(con, pstmt, null);
+        }
+    }
+
+    public void delete(String memberId) throws SQLException {
+        String sql = "delete from member where member_id=?";
+
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        try{
+            con = getConnection();
+            pstmt = con.prepareStatement(sql);
+            pstmt.setString(1, memberId);
+            int resultSize = pstmt.executeUpdate();
+
+            // executeUpdate는 DB에 영향 받은 row의 수만큼 반환해준다.
+            log.error("resultSize={}", resultSize);
+
+        } catch (SQLException e) {
+            log.error("db error", e);
+            throw e;
+        }finally {
+            // 리소스 해제는 반드시 finally에서 실행해줘야지 위에서 해버리면 에러 터졌을 때
+            // 클로즈 못 한다.
+            close(con, pstmt, null);
+        }
+
+    }
+
     private void close(Connection con, Statement stmt, ResultSet rs) {
 
         if (rs != null ) {
