@@ -31,7 +31,7 @@ public class MemberServiceV3_1 {
     private final MemberRepositoryV3 memberRepository;
 
     public void accountTransfer(String fromId, String toId, int money) throws SQLException {
-        // 트랜잭션 시작
+        // 트랜잭션 시작`
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
 
