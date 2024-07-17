@@ -1,8 +1,8 @@
 package hello.springjdbc.exception.basic;
 
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
-import java.net.ConnectException;
 import java.sql.SQLException;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
@@ -18,13 +18,25 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
  * -----------------------------------------------------------
  * 2024-07-15        이광호       최초 생성
  */
+@Slf4j
 public class UnCheckedAppTest {
 
     @Test
-    void checked() {
+    void unchecked() {
         Controller controller = new Controller();
         assertThatThrownBy(()-> controller.request())
                 .isInstanceOf(Exception.class);
+    }
+
+    @Test
+    void printEx() {
+        Controller controller = new Controller();
+        try {
+            controller.request();
+        }
+         catch (Exception e) {
+            log.info("ex", e);
+         }
     }
 
     static class Controller {
