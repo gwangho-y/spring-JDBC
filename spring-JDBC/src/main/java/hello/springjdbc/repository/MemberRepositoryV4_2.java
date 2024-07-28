@@ -1,9 +1,12 @@
 package hello.springjdbc.repository;
 
 import hello.springjdbc.domain.Member;
+import hello.springjdbc.repository.ex.MyDbException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.jdbc.support.JdbcUtils;
+import org.springframework.jdbc.support.SQLErrorCodeSQLExceptionTranslator;
+import org.springframework.jdbc.support.SQLExceptionTranslator;
 
 import javax.sql.DataSource;
 import java.sql.*;
@@ -14,24 +17,26 @@ import java.util.NoSuchElementException;
  * fileName       : MemberRepositoryV0
  * author         : gwangho
  * date           : 2024-06-24
- * description    : 트랜잭션 - 트랜잭션 매니저
- * DataSourceUtils.getConnection()
- * DataSourceUtils.releaseConnection()
+ * description    : SQlExceptionTranslator 추가
+
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2024-06-24        dlrhk       최초 생성
  */
 @Slf4j
-public class MemberRepositoryV3 {
+public class MemberRepositoryV4_2 implements MemberRepository {
 
     private final DataSource dataSource;
+    private final SQLExceptionTranslator exTranslator;
 
-    public MemberRepositoryV3(DataSource dataSource) {
+    public MemberRepositoryV4_2(DataSource dataSource) {
         this.dataSource = dataSource;
+        this.exTranslator = new SQLErrorCodeSQLExceptionTranslator(dataSource);
     }
 
-    public Member save(Member member) throws SQLException {
+    @Override
+    public Member save(Member member) {
         // sql 인젝션 예방 , 파라미터 바인딩
         String sql = "insert into member(member_id, money) values (?, ?)";
 
@@ -47,16 +52,15 @@ public class MemberRepositoryV3 {
             int count = pstmt.executeUpdate();
             return member;
         } catch (SQLException e) {
-            log.error("db error", e);
-            throw e;
-        } finally {
+            throw exTranslator.translate("save", sql, e);
+        }finally {
             // 리소스 해제는 반드시 finally에서 실행해줘야지 위에서 해버리면 에러 터졌을 때
             // 클로즈 못 한다.
             close(con, pstmt, null);
         }
     }
-
-    public Member findById(String memberId) throws SQLException {
+    @Override
+    public Member findById(String memberId)  {
         String sql = "select * from member where member_id=?";
         Connection con = null;
         PreparedStatement pstmt = null;
@@ -75,19 +79,20 @@ public class MemberRepositoryV3 {
                 member.setMoney(rs.getInt("money"));
                 return member;
             } else {
+
                 throw new NoSuchElementException("member not found memberId=" + memberId);
             }
         }catch (SQLException e) {
-            log.error("db error", e);
-            throw e;
+
+            throw exTranslator.translate("findById", sql, e);
         }
         finally {
             close(con, pstmt, rs);
         }
     }
 
-
-    public void update(String memberId, int money) throws SQLException {
+    @Override
+    public void update(String memberId, int money) {
         String sql = "update member set money=? where member_id=?";
         Connection con = null;
         PreparedStatement pstmt = null;
@@ -103,8 +108,7 @@ public class MemberRepositoryV3 {
             log.error("resultSize={}", resultSize);
 
         } catch (SQLException e) {
-            log.error("db error", e);
-            throw e;
+            throw exTranslator.translate("update", sql, e);
         }finally {
             // 리소스 해제는 반드시 finally에서 실행해줘야지 위에서 해버리면 에러 터졌을 때
             // 클로즈 못 한다.
@@ -113,7 +117,7 @@ public class MemberRepositoryV3 {
     }
 
 
-    public void delete(String memberId) throws SQLException {
+    public void delete(String memberId)  {
         String sql = "delete from member where member_id=?";
 
         Connection con = null;
@@ -128,8 +132,7 @@ public class MemberRepositoryV3 {
             log.error("resultSize={}", resultSize);
 
         } catch (SQLException e) {
-            log.error("db error", e);
-            throw e;
+            throw exTranslator.translate("delete", sql, e);
         }finally {
             // 리소스 해제는 반드시 finally에서 실행해줘야지 위에서 해버리면 에러 터졌을 때
             // 클로즈 못 한다.
