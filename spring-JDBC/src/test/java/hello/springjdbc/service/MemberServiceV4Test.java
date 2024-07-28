@@ -5,6 +5,7 @@ import hello.springjdbc.repository.MemberRepository;
 
 import hello.springjdbc.repository.MemberRepositoryV4_1;
 import hello.springjdbc.repository.MemberRepositoryV4_2;
+import hello.springjdbc.repository.MemberRepositoryV5;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
@@ -65,7 +66,7 @@ class MemberServiceV4Test {
         }
         @Bean
         MemberRepository memberRepository() {
-            return new MemberRepositoryV4_2(dataSource);
+            return new MemberRepositoryV5(dataSource);
         }
 
         @Bean
