@@ -1,0 +1,39 @@
+package hello.itemservice.config;
+
+import hello.itemservice.repository.ItemRepository;
+import hello.itemservice.repository.jpa.JpaItemRepositoryV2;
+import hello.itemservice.repository.jpa.JpaItemRepositoryV3;
+import hello.itemservice.repository.jpa.SpringDataJpaItemRepository;
+import hello.itemservice.service.ItemService;
+import hello.itemservice.service.ItemServiceV1;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+/**
+ * packageName    : com.kovo.domain.ticketlink
+ * fileName       : SpringDataJpaConfig
+ * author         : 이광호
+ * date           : 2024-12-18
+ * description    :
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2024-12-18        이광호       최초 생성
+ */
+@Configuration
+@RequiredArgsConstructor
+public class SpringDataJpaConfig {
+
+    private final SpringDataJpaItemRepository springDataJpaItemRepository;
+
+    @Bean
+    public ItemService itemService() {
+        return new ItemServiceV1(itemRepository());
+    }
+
+    @Bean
+    public ItemRepository itemRepository() {
+        return new JpaItemRepositoryV2(springDataJpaItemRepository);
+    }
+}

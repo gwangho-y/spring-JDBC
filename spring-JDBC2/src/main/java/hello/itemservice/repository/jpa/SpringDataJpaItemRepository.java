@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+
 /**
  * packageName    : com.kovo.domain.ticketlink
  * fileName       : SpringDataJpaItemRepository
@@ -30,7 +31,7 @@ public interface SpringDataJpaItemRepository extends JpaRepository<Item, Long> {
     );
 
     // 쿼리 직접 실행
-    @Query("select i from Item i where i.itemName like :item and i.price <= :price")
+    @Query("select i from Item i where i.itemName like :itemName and i.price <= :price")
     List<Item> findItems(
         @Param("itemName") String itemName,
         @Param("price") Integer price

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 /**
@@ -23,6 +24,7 @@ import org.springframework.util.StringUtils;
  */
 @Repository
 @RequiredArgsConstructor
+@Transactional
 public class JpaItemRepositoryV2 implements ItemRepository {
 
     private final SpringDataJpaItemRepository repository;
